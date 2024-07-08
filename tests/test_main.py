@@ -34,6 +34,7 @@ def test_model_explicit():
         batch_size=50,
         max_iter=5,
     )
+    model.transform(adata, omics_key="X_pca", tau=1.0, batch_size=50)
 
 
 def test_model_linear():
@@ -47,6 +48,7 @@ def test_model_linear():
         batch_size=50,
         max_iter=5,
     )
+    model.transform(adata, omics_key="X_pca", tau=1.0, batch_size=50)
 
 
 def test_model_10steps():
@@ -60,6 +62,7 @@ def test_model_10steps():
         batch_size=50,
         max_iter=5,
     )
+    model.transform(adata, omics_key="X_pca", tau=1.0, batch_size=50)
 
 
 def test_model_ICNN_implicit():
@@ -73,6 +76,7 @@ def test_model_ICNN_implicit():
         batch_size=50,
         max_iter=5,
     )
+    model.transform(adata, omics_key="X_pca", tau=1.0, batch_size=50)
 
 
 def test_model_monge_implicit():
@@ -86,3 +90,4 @@ def test_model_monge_implicit():
         batch_size=50,
         max_iter=5,
     )
+    model.transform(adata, omics_key="X_pca", tau=1.0, batch_size=50)
