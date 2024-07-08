@@ -5,7 +5,7 @@ import jax
 import jax.numpy as jnp
 
 key = jax.random.PRNGKey(0)
-key_0, key_1, key_2 = jax.random.split(key)
+key_0, key_1, key_2 = jax.random.split(key, 3)
 
 x_0 = jax.random.normal(key_0, shape=(100, 20))
 x_1 = jax.random.normal(key_1, shape=(100, 20))
