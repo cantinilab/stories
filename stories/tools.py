@@ -171,7 +171,7 @@ def compute_velocity(
     adata: AnnData,
     model: SpaceTime,
     omics_key: str,
-    key_added: str = "potential",
+    key_added: str = "X_velo",
 ) -> None:
     """Compute -grad J for all cells in an AnnData object, where J is the potential.
 
