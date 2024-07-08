@@ -25,7 +25,7 @@ adata.obsm["spatial"] = adata.X[:, :2].copy()
 
 def test_model_explicit():
     step = stories.steps.ExplicitStep()
-    model = stories.SpaceTime()
+    model = stories.SpaceTime(proximal_step=step)
     model.fit(
         adata,
         time_key="time",
@@ -38,7 +38,7 @@ def test_model_explicit():
 
 def test_model_linear():
     step = stories.steps.ExplicitStep()
-    model = stories.SpaceTime(quadratic=False)
+    model = stories.SpaceTime(proximal_step=step, quadratic=False)
     model.fit(
         adata,
         time_key="time",
@@ -51,7 +51,7 @@ def test_model_linear():
 
 def test_model_ICNN_implicit():
     step = stories.steps.ICNNImplicitStep()
-    model = stories.SpaceTime()
+    model = stories.SpaceTime(proximal_step=step)
     model.fit(
         adata,
         time_key="time",
@@ -64,7 +64,7 @@ def test_model_ICNN_implicit():
 
 def test_model_monge_implicit():
     step = stories.steps.MongeImplicitStep()
-    model = stories.SpaceTime()
+    model = stories.SpaceTime(proximal_step=step)
     model.fit(
         adata,
         time_key="time",
