@@ -1,2 +1,1 @@
-# stories
-Learning cell fate landscapes from spatial transcriptomics using Fused Gromov-Wasserstein
+# Learning cell fate landscapes from spatial transcriptomics using Fused Gromov-Wasserstein
