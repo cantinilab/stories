@@ -49,6 +49,19 @@ def test_model_linear():
     )
 
 
+def test_model_10steps():
+    step = stories.steps.ExplicitStep()
+    model = stories.SpaceTime(proximal_step=step, quadratic=False, n_steps=10)
+    model.fit(
+        adata,
+        time_key="time",
+        omics_key="X_pca",
+        space_key="spatial",
+        batch_size=50,
+        max_iter=5,
+    )
+
+
 def test_model_ICNN_implicit():
     step = stories.steps.ICNNImplicitStep()
     model = stories.SpaceTime(proximal_step=step)
