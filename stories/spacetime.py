@@ -24,7 +24,7 @@ from .loss import loss_fn
 
 @dataclass
 class SpaceTime:
-    """Multi-modal Wasserstein gradient flow model for spatio-temporal omics data.
+    """Wasserstein gradient flow model for spatio-temporal omics data.
 
     Args:
         potential (nn.Module, optional): The potential function. Defaults to a MLP.
