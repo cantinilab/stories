@@ -190,8 +190,8 @@ def compute_velocity(
 def plot_velocity(
     adata: AnnData,
     omics_key: str,
-    velocity_key: str,
     basis: str,
+    velocity_key: str = "X_velo",
     **kwargs,
 ) -> None:
     """Plot velocity, as computed by `compute_velocity`
