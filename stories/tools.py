@@ -7,6 +7,7 @@ import jax.numpy as jnp
 import numpy as np
 from dataclasses import dataclass
 import logging
+from .spacetime import SpaceTime
 
 
 @dataclass
@@ -145,3 +146,64 @@ class DataLoader:
         """
         freq_val = 1 - self.train_val_split
         return iteration % int(1 / freq_val) != 0
+
+
+def compute_potential(
+    adata: AnnData,
+    model: SpaceTime,
+    omics_key: str,
+    key_added: str = "potential",
+) -> None:
+    """Compute the potential for all cells in an AnnData object.
+
+    Args:
+        adata (AnnData): Input data
+        model (SpaceTime): Trained model
+        omics_key (str): The omics key
+        key_added (str): The obs key to store the potential. Defaults to "potential"
+
+    """
+    potential_fn = lambda x: model.potential.apply(model.params, x)
+    adata.obs[key_added] = np.array(potential_fn(adata.obsm[omics_key]))
+
+
+def compute_velocity(
+    adata: AnnData,
+    model: SpaceTime,
+    omics_key: str,
+    key_added: str = "potential",
+) -> None:
+    """Compute -grad J for all cells in an AnnData object, where J is the potential.
+
+    Args:
+        adata (AnnData): Input data
+        model (SpaceTime): Trained model
+        omics_key (str): The omics key
+        key_added (str): The obsm key to store the potential. Defaults to "X_velo"
+
+    """
+    potential_fn = lambda x: model.potential.apply(model.params, x)
+    velo_fn = lambda x: -jax.vmap(jax.grad(potential_fn))(x)
+    adata.obsm[key_added] = np.array(velo_fn(adata.obsm[omics_key]))
+
+
+def plot_velocity(
+    adata: AnnData,
+    omics_key: str,
+    velocity_key: str,
+    basis: str,
+    **kwargs,
+) -> None:
+    """Plot velocity, as computed by `compute_velocity`
+
+    Args:
+        adata (AnnData): Input data
+        omics_key (str): The obsm key for omics
+        velocity_key (str): The obsm key for the velocity
+    """
+    import cellrank as cr
+
+    vk = cr.kernels.VelocityKernel(
+        adata, attr="obsm", xkey=omics_key, vkey=velocity_key
+    ).compute_transition_matrix()
+    vk.plot_projection(basis=basis, recompute=True, **kwargs)
