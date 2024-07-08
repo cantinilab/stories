@@ -106,7 +106,8 @@ def quadratic_loss(
         scale_cost=(1 / np.sqrt(quadratic_weight)),
     )
     geom_s_y = PointCloud(
-        space_y, space_y,
+        space_y,
+        space_y,
         scale_cost=(1 / np.sqrt(quadratic_weight)),
     )
     geom_xy = PointCloud(x, y, scale_cost=(1 / (1 - quadratic_weight)))
