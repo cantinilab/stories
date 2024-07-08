@@ -7,7 +7,6 @@ import jax.numpy as jnp
 import numpy as np
 from dataclasses import dataclass
 import logging
-from .spacetime import SpaceTime
 
 
 @dataclass
@@ -150,7 +149,7 @@ class DataLoader:
 
 def compute_potential(
     adata: AnnData,
-    model: SpaceTime,
+    model,
     omics_key: str,
     key_added: str = "potential",
 ) -> None:
@@ -169,7 +168,7 @@ def compute_potential(
 
 def compute_velocity(
     adata: AnnData,
-    model: SpaceTime,
+    model,
     omics_key: str,
     key_added: str = "X_velo",
 ) -> None:
