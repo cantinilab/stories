@@ -1,5 +1,8 @@
 [tool.poetry]
 name = "stories-jax"
+packages = [
+    { include="stories", from="." },
+]
 version = "0.1.0"
 description = "Learn spatially informed Waddington-like potentials for single-cell gene expression"
 authors = ["Geert-Jan Huizing <gjhuizing@gmail.com>"]
