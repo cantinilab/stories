@@ -1,5 +1,5 @@
 import stories
 
 
-def test_empty():
-    assert True
+def test_model():
+    model = stories.SpaceTime()
