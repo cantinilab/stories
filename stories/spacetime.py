@@ -188,7 +188,9 @@ class SpaceTime:
                 # If we have a checkpoint manager, try to save the parameters.
                 if checkpoint_manager:
                     metrics = {"loss": np.float64(last_l)}
-                    checkpoint_manager.save(it, args=StandardSave(self.params), metrics=metrics)
+                    checkpoint_manager.save(
+                        it, args=StandardSave(self.params), metrics=metrics
+                    )
                     checkpoint_manager.wait_until_finished()
 
     def transform(
