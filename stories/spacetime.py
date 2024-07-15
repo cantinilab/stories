@@ -13,6 +13,7 @@ from jax.random import PRNGKey
 from jax._src.random import KeyArray
 from optax import GradientTransformation
 from orbax.checkpoint import CheckpointManager
+from orbax.checkpoint.args import StandardSave
 from tqdm import tqdm
 
 from .steps.proximal_step import ProximalStep
@@ -187,7 +188,8 @@ class SpaceTime:
                 # If we have a checkpoint manager, try to save the parameters.
                 if checkpoint_manager:
                     metrics = {"loss": np.float64(last_l)}
-                    checkpoint_manager.save(it, self.params, save_kwargs, metrics)
+                    checkpoint_manager.save(it, args=StandardSave(self.params), metrics=metrics)
+                    checkpoint_manager.wait_until_finished()
 
     def transform(
         self,
