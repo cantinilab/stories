@@ -11,6 +11,8 @@ from flax.training import orbax_utils
 from flax.training.early_stopping import EarlyStopping
 from jax.random import PRNGKey
 from jax._src.random import KeyArray
+import uuid
+from orbax.checkpoint.args import StandardRestore
 from optax import GradientTransformation
 from orbax.checkpoint import CheckpointManager
 from orbax.checkpoint.args import StandardSave
@@ -19,7 +21,7 @@ from tqdm import tqdm
 from .steps.proximal_step import ProximalStep
 from .steps.explicit import ExplicitStep
 from .potentials import MLPPotential
-from .tools import DataLoader
+from .tools import DataLoader, default_checkpoint_manager
 from .loss import loss_fn
 
 
@@ -62,8 +64,9 @@ class SpaceTime:
         train_val_split: float = 0.75,
         min_delta: float = 0.0,
         patience: int = 150,
-        checkpoint_manager: CheckpointManager | None = None,
+        checkpoint_manager: CheckpointManager | str | None = None,
         key: KeyArray = PRNGKey(0),
+        restore: bool = True,
     ) -> None:
         """Fit the model.
 
@@ -72,14 +75,16 @@ class SpaceTime:
             time_key (str): The name of the time observation.
             omics_key (str): The name of the obsm field containing cell coordinates.
             space_key (str): The name of the obsm field containing space coordinates.
+            weight_key (str): The name of the obs field containing weights.
             optimizer (GradientTransformation, optional): The optimizer.
             max_iter (int, optional): The max number of iterations. Defaults to 10_000.
             batch_size (int, optional): The batch size. Defaults to 1_000.
             train_val_split (float, optional): The proportion of train in the split.
             min_delta (float, optional): The minimum delta for early stopping.
             patience (int, optional): The patience for early stopping.
-            checkpoint_manager (CheckpointManager, optional): The checkpoint manager.
+            checkpoint_manager (CheckpointManager, optional): Checkpoint manager or path.
             key (KeyArray, optional): The random key. Defaults to PRNGKey(0).
+            restore (bool, optional): By default, load the checkpointed params.
         """
 
         # Assert the quadratic weight is strictly between 0 and 1 if self.quadratic.
@@ -87,6 +92,12 @@ class SpaceTime:
             assert (
                 0 < self.quadratic_weight < 1
             ), "Relative quadratic weight must be strictly between 0 and 1."
+        
+        # If the checkpoint_manager is a string, make the default one.
+        if not checkpoint_manager:
+            checkpoint_manager = default_checkpoint_manager(f"/tmp/{uuid.uuid4()}")
+        elif checkpoint_manager and isinstance(checkpoint_manager, str):
+            checkpoint_manager = default_checkpoint_manager(checkpoint_manager)
 
         # Initialize the statistics for logging.
         self.train_it, self.train_losses = [], []
@@ -137,7 +148,6 @@ class SpaceTime:
 
         # Define the early stopping criterion and checkpointing parameters.
         early_stop = EarlyStopping(min_delta=min_delta, patience=patience)
-        save_kwargs = {"save_args": orbax_utils.save_args_from_target(self.params)}
 
         # The training loop.
         pbar = tqdm(range(1, max_iter + 1))
@@ -185,13 +195,16 @@ class SpaceTime:
                     print("Met early stopping criteria, breaking...")
                     break
 
-                # If we have a checkpoint manager, try to save the parameters.
-                if checkpoint_manager:
-                    metrics = {"loss": np.float64(last_l)}
-                    checkpoint_manager.save(
-                        it, args=StandardSave(self.params), metrics=metrics
-                    )
-                    checkpoint_manager.wait_until_finished()
+                # Try to save the parameters.
+                metrics = {"loss": np.float64(last_l)}
+                checkpoint_manager.save(
+                    it, args=StandardSave(self.params), metrics=metrics
+                )
+                checkpoint_manager.wait_until_finished()
+        
+        if restore:
+            self.best_step = checkpoint_manager.best_step()
+            self.params = checkpoint_manager.restore(self.best_step, args=StandardRestore(self.params))
 
     def transform(
         self,

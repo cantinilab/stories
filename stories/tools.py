@@ -3,10 +3,21 @@ from typing import Dict
 from anndata import AnnData
 import jax
 from jax._src.random import KeyArray
+from orbax.checkpoint import CheckpointManagerOptions, CheckpointManager
+import orbax.checkpoint as ocp
 import jax.numpy as jnp
 import numpy as np
 from dataclasses import dataclass
 import logging
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import SplineTransformer
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+from tqdm import tqdm
+from scipy.stats import ranksums
 
 
 @dataclass
@@ -206,3 +217,167 @@ def plot_velocity(
         adata, attr="obsm", xkey=omics_key, vkey=velocity_key
     ).compute_transition_matrix()
     vk.plot_projection(basis=basis, recompute=True, **kwargs)
+
+def default_checkpoint_manager(absolute_path: str) -> CheckpointManager:
+    """Return a checkpoint manager
+
+    Args:
+        absolute_path (str): Checkpointing path
+    """
+    path = ocp.test_utils.erase_and_create_empty(absolute_path)
+    options = CheckpointManagerOptions(
+        save_interval_steps=1,
+        max_to_keep=1,
+        best_fn=lambda x: x["loss"],
+        best_mode="min",
+    )
+    return CheckpointManager(path / "checkpoints", options=options)
+
+def regress_genes(adata, potential_key="potential", regression_model=None, key_added="regression") -> None:
+
+    # We want to regress gene expression from the potential
+    x_train = np.array(adata.obs[potential_key]).reshape(-1, 1).astype(np.float64)
+
+    # The model is a spline regression
+    if not regression_model:
+        regression_model = make_pipeline(
+            SplineTransformer(knots="quantile", extrapolation="continue"),
+            LinearRegression(),
+        )
+    
+    adata.layers[key_added] = adata.X.copy()
+
+    # Fit the regression_model for each gene and keep the score and argmax
+    for i, gene in tqdm(enumerate(adata.var_names)):
+
+        # The target gene expression
+        y_train = adata[:, gene].X.ravel()
+
+        # Fit the regression_model
+        regression_model.fit(x_train, y_train)
+
+        # Store the results
+        adata.layers[key_added][:, i] = regression_model.predict(x_train)
+        adata.var.loc[gene, key_added + "_score"] = regression_model.score(x_train, y_train)
+        adata.var.loc[gene, key_added + "_argmax"] = regression_model.predict(np.sort(x_train, axis=0)).argmax()
+
+def select_driver_genes(adata, n_stages: int, n_genes: int, regression_key="regression", remove_ones=True):
+    
+    # By default, remove perfect score since they are suspect.
+    idx = np.array(adata.var[f"{regression_key}_score"]) != 1.0
+    adata_subset = adata[:, idx] if remove_ones else adata
+
+    i_list = np.arange(0, adata_subset.n_obs, adata_subset.n_obs // n_stages)
+
+    gene_names = []
+    for k in range(len(i_list) - 1):
+
+        # We'll look for the best genes in this interval
+        i_min, i_max = i_list[k], i_list[k + 1]
+        order_idx = i_min <= np.array(adata_subset.var[f"{regression_key}_argmax"])
+        order_idx &= np.array(adata_subset.var[f"{regression_key}_argmax"]) < i_max
+
+        for j, i in enumerate(
+            np.where(order_idx)[0][
+                np.argsort(np.array(adata_subset.var[f"{regression_key}_score"])[order_idx])[::-1][:n_genes]
+            ]
+        ):
+            gene_names.append(adata_subset.var_names[i])
+    
+    return adata.var.loc[gene_names, f"{regression_key}_argmax"].sort_values().index
+
+def plot_gene_trends(adata, gene_names, potential_key="potential", regression_key="regression", title=""):
+
+    fig, ax = plt.subplots(1, 1)
+
+    X = adata[np.argsort(np.array(adata.obs[potential_key])), gene_names].layers[regression_key].T.copy()
+
+    # Normalize rows
+    X = X - X.min(axis=1)[:, None]
+    X = X / X.max(axis=1)[:, None]
+    implot = ax.imshow(X, aspect="auto", cmap="viridis", interpolation="none")
+
+    # Set gene_names as yticks with small font size
+    ax.set_yticks(
+        np.arange(0, X.shape[0]),
+        gene_names,
+        fontsize=6,
+    )
+    ax.set_xlabel("Cells ordered by potential")
+
+    fig.colorbar(implot)
+    plt.title(title)
+    
+    return fig, ax
+
+def plot_single_gene_trend(adata, gene, potential_key="potential", annotation_key="annotation", regression_key="regression", show_regression=False, **kwargs):
+
+    sns.scatterplot(
+        x=adata.obs[potential_key],
+        y=adata[:, gene].X.ravel(),
+        hue=adata.obs[annotation_key],
+        **kwargs
+    )
+    
+    if show_regression:
+        xx = adata.obs[potential_key]
+        yy = adata[:, gene].layers[regression_key].ravel()
+        sns.lineplot(x=xx, y=yy)
+
+    sns.despine()
+
+    plt.title(gene)
+    plt.legend(markerscale=3)
+    plt.show()
+
+def tf_enrich(adata, trrust_path="trrust_rawdata.mouse.tsv", regression_key="regression"):
+    df_tf = pd.read_csv(trrust_path, sep="\t", header=None)
+    df_tf.columns = ["TF", "Target", "Mode", "References"]
+    df_tf = df_tf[df_tf["Target"].isin(adata.var_names)]
+
+    for tf in tqdm(df_tf["TF"].unique()):
+        idx = df_tf["TF"] == tf
+        adata.var[tf] = 0.0
+
+        # Iterate over rows of df_tf[idx]:
+        for target in df_tf.loc[idx, "Target"]:
+            adata.var.loc[adata.var_names == target, tf] = 1
+
+    df_tf_stats = pd.DataFrame(index=df_tf["TF"].unique())
+    for tf in tqdm(df_tf_stats.index):
+
+        idx_target = adata.var[tf] > 0
+        target_scores = adata.var.loc[idx_target, f"{regression_key}_score"].values.astype(float)
+
+        idx_nontarget = adata.var[tf] == 0
+        nontarget_scores = adata.var.loc[idx_nontarget, f"{regression_key}_score"].values.astype(float)
+
+        stat, p_value = ranksums(target_scores, nontarget_scores, alternative="greater")
+        df_tf_stats.loc[tf, ["stat", "p_value", "n_targets"]] = (
+            stat,
+            p_value,
+            idx_target.sum(),
+        )
+
+    idx = df_tf_stats["p_value"] < 0.05
+    tf_names = df_tf_stats[idx].sort_values("p_value").index[:20]
+    sns.barplot(y=tf_names.str.upper(), x=-np.log10(df_tf_stats.loc[tf_names, "p_value"]))
+    plt.ylabel("Transcription factor")
+    plt.xlabel(r"$-\log_{10}(p)$")
+    plt.title("Transcription factor enrichment scores")
+    plt.show()
+
+def plot_losses(model):
+    plt.plot(model.train_it, model.train_losses, label="Train")
+    plt.plot(model.val_it, model.val_losses, label="Validation")
+    plt.plot(
+        model.best_step,
+        model.val_losses[np.where(np.array(model.val_it) == model.best_step)[0][0]],
+        "g*",
+        label="Retained iteration",
+    )
+    plt.ylabel("Loss")
+    plt.xlabel("Iteration")
+    plt.legend()
+    plt.yscale("log")
+    plt.show()
