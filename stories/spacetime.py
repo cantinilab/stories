@@ -92,7 +92,7 @@ class SpaceTime:
             assert (
                 0 < self.quadratic_weight < 1
             ), "Relative quadratic weight must be strictly between 0 and 1."
-        
+
         # If the checkpoint_manager is a string, make the default one.
         if not checkpoint_manager:
             checkpoint_manager = default_checkpoint_manager(f"/tmp/{uuid.uuid4()}")
@@ -201,10 +201,12 @@ class SpaceTime:
                     it, args=StandardSave(self.params), metrics=metrics
                 )
                 checkpoint_manager.wait_until_finished()
-        
+
         if restore:
             self.best_step = checkpoint_manager.best_step()
-            self.params = checkpoint_manager.restore(self.best_step, args=StandardRestore(self.params))
+            self.params = checkpoint_manager.restore(
+                self.best_step, args=StandardRestore(self.params)
+            )
 
     def transform(
         self,

@@ -218,6 +218,7 @@ def plot_velocity(
     ).compute_transition_matrix()
     vk.plot_projection(basis=basis, recompute=True, **kwargs)
 
+
 def default_checkpoint_manager(absolute_path: str) -> CheckpointManager:
     """Return a checkpoint manager
 
@@ -233,7 +234,10 @@ def default_checkpoint_manager(absolute_path: str) -> CheckpointManager:
     )
     return CheckpointManager(path / "checkpoints", options=options)
 
-def regress_genes(adata, potential_key="potential", regression_model=None, key_added="regression") -> None:
+
+def regress_genes(
+    adata, potential_key="potential", regression_model=None, key_added="regression"
+) -> None:
 
     # We want to regress gene expression from the potential
     x_train = np.array(adata.obs[potential_key]).reshape(-1, 1).astype(np.float64)
@@ -244,7 +248,7 @@ def regress_genes(adata, potential_key="potential", regression_model=None, key_a
             SplineTransformer(knots="quantile", extrapolation="continue"),
             LinearRegression(),
         )
-    
+
     adata.layers[key_added] = adata.X.copy()
 
     # Fit the regression_model for each gene and keep the score and argmax
@@ -258,11 +262,18 @@ def regress_genes(adata, potential_key="potential", regression_model=None, key_a
 
         # Store the results
         adata.layers[key_added][:, i] = regression_model.predict(x_train)
-        adata.var.loc[gene, key_added + "_score"] = regression_model.score(x_train, y_train)
-        adata.var.loc[gene, key_added + "_argmax"] = regression_model.predict(np.sort(x_train, axis=0)).argmax()
+        adata.var.loc[gene, key_added + "_score"] = regression_model.score(
+            x_train, y_train
+        )
+        adata.var.loc[gene, key_added + "_argmax"] = regression_model.predict(
+            np.sort(x_train, axis=0)
+        ).argmax()
 
-def select_driver_genes(adata, n_stages: int, n_genes: int, regression_key="regression", remove_ones=True):
-    
+
+def select_driver_genes(
+    adata, n_stages: int, n_genes: int, regression_key="regression", remove_ones=True
+):
+
     # By default, remove perfect score since they are suspect.
     idx = np.array(adata.var[f"{regression_key}_score"]) != 1.0
     adata_subset = adata[:, idx] if remove_ones else adata
@@ -279,18 +290,27 @@ def select_driver_genes(adata, n_stages: int, n_genes: int, regression_key="regr
 
         for j, i in enumerate(
             np.where(order_idx)[0][
-                np.argsort(np.array(adata_subset.var[f"{regression_key}_score"])[order_idx])[::-1][:n_genes]
+                np.argsort(
+                    np.array(adata_subset.var[f"{regression_key}_score"])[order_idx]
+                )[::-1][:n_genes]
             ]
         ):
             gene_names.append(adata_subset.var_names[i])
-    
+
     return adata.var.loc[gene_names, f"{regression_key}_argmax"].sort_values().index
 
-def plot_gene_trends(adata, gene_names, potential_key="potential", regression_key="regression", title=""):
+
+def plot_gene_trends(
+    adata, gene_names, potential_key="potential", regression_key="regression", title=""
+):
 
     fig, ax = plt.subplots(1, 1)
 
-    X = adata[np.argsort(np.array(adata.obs[potential_key])), gene_names].layers[regression_key].T.copy()
+    X = (
+        adata[np.argsort(np.array(adata.obs[potential_key])), gene_names]
+        .layers[regression_key]
+        .T.copy()
+    )
 
     # Normalize rows
     X = X - X.min(axis=1)[:, None]
@@ -307,18 +327,27 @@ def plot_gene_trends(adata, gene_names, potential_key="potential", regression_ke
 
     fig.colorbar(implot)
     plt.title(title)
-    
+
     return fig, ax
 
-def plot_single_gene_trend(adata, gene, potential_key="potential", annotation_key="annotation", regression_key="regression", show_regression=False, **kwargs):
+
+def plot_single_gene_trend(
+    adata,
+    gene,
+    potential_key="potential",
+    annotation_key="annotation",
+    regression_key="regression",
+    show_regression=False,
+    **kwargs,
+):
 
     sns.scatterplot(
         x=adata.obs[potential_key],
         y=adata[:, gene].X.ravel(),
         hue=adata.obs[annotation_key],
-        **kwargs
+        **kwargs,
     )
-    
+
     if show_regression:
         xx = adata.obs[potential_key]
         yy = adata[:, gene].layers[regression_key].ravel()
@@ -330,7 +359,10 @@ def plot_single_gene_trend(adata, gene, potential_key="potential", annotation_ke
     plt.legend(markerscale=3)
     plt.show()
 
-def tf_enrich(adata, trrust_path="trrust_rawdata.mouse.tsv", regression_key="regression"):
+
+def tf_enrich(
+    adata, trrust_path="trrust_rawdata.mouse.tsv", regression_key="regression"
+):
     df_tf = pd.read_csv(trrust_path, sep="\t", header=None)
     df_tf.columns = ["TF", "Target", "Mode", "References"]
     df_tf = df_tf[df_tf["Target"].isin(adata.var_names)]
@@ -347,10 +379,14 @@ def tf_enrich(adata, trrust_path="trrust_rawdata.mouse.tsv", regression_key="reg
     for tf in tqdm(df_tf_stats.index):
 
         idx_target = adata.var[tf] > 0
-        target_scores = adata.var.loc[idx_target, f"{regression_key}_score"].values.astype(float)
+        target_scores = adata.var.loc[
+            idx_target, f"{regression_key}_score"
+        ].values.astype(float)
 
         idx_nontarget = adata.var[tf] == 0
-        nontarget_scores = adata.var.loc[idx_nontarget, f"{regression_key}_score"].values.astype(float)
+        nontarget_scores = adata.var.loc[
+            idx_nontarget, f"{regression_key}_score"
+        ].values.astype(float)
 
         stat, p_value = ranksums(target_scores, nontarget_scores, alternative="greater")
         df_tf_stats.loc[tf, ["stat", "p_value", "n_targets"]] = (
@@ -361,11 +397,14 @@ def tf_enrich(adata, trrust_path="trrust_rawdata.mouse.tsv", regression_key="reg
 
     idx = df_tf_stats["p_value"] < 0.05
     tf_names = df_tf_stats[idx].sort_values("p_value").index[:20]
-    sns.barplot(y=tf_names.str.upper(), x=-np.log10(df_tf_stats.loc[tf_names, "p_value"]))
+    sns.barplot(
+        y=tf_names.str.upper(), x=-np.log10(df_tf_stats.loc[tf_names, "p_value"])
+    )
     plt.ylabel("Transcription factor")
     plt.xlabel(r"$-\log_{10}(p)$")
     plt.title("Transcription factor enrichment scores")
     plt.show()
+
 
 def plot_losses(model):
     plt.plot(model.train_it, model.train_losses, label="Train")
