@@ -8,7 +8,7 @@ from .proximal_step import ProximalStep
 
 class ExplicitStep(ProximalStep):
     """This class implements the explicit proximal step associated with the Wasserstein
-    distance, i.e. :math:`v = -\nabla J(x)`, where :math:`J` is a potential."""
+    distance, i.e. v = -nabla J(x), where J is a potential."""
 
     def inference_step(
         self,

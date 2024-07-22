@@ -60,27 +60,4 @@ via GitHub (development version)
 Getting started
 ---------------
 
-STORIES takes as an input an AnnData object, where omics information and spatial coordinates are stored in `obsm`, and `obs` contains time information, and optionally a proliferation weight. Visit the **Getting started** and **API** sections for more documentation and tutorials.
-
-You may download a preprocessed Stereo-seq demo dataset at https://figshare.com/s/xxxxxx.
-
-.. code-block:: python
-
-   import anndata as ad
-   from stories import SpaceTime
-
-   # Load data into a AnnData object.
-   adata = ad.load_h5ad("my_data.h5ad")
-
-   # Initialize and train the model.
-   model = SpaceTime()
-   model.fit()
-
-   cccccc
-
-Citation
---------
-
-.. code-block:: bibtex
-
-  xxxxx
+STORIES takes as an input an AnnData object, where omics information and spatial coordinates are stored in `obsm`, and `obs` contains time information, and optionally a proliferation weight. Visit the **Getting started** and **API** sections for tutorials and documentation.
