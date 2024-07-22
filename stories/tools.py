@@ -360,10 +360,13 @@ def plot_single_gene_trend(
     plt.show()
 
 
-def tf_enrich(adata, trrust_path, regression_key="regression"):
+def tf_enrich(adata, trrust_path, regression_key="regression", gene_key=None):
     df_tf = pd.read_csv(trrust_path, sep="\t", header=None)
     df_tf.columns = ["TF", "Target", "Mode", "References"]
-    df_tf = df_tf[df_tf["Target"].isin(adata.var_names)]
+    if gene_key:
+        df_tf = df_tf[df_tf["Target"].isin(adata.var[gene_key].values)]
+    else:
+        df_tf = df_tf[df_tf["Target"].isin(adata.var_names)]
 
     for tf in tqdm(df_tf["TF"].unique()):
         idx = df_tf["TF"] == tf
@@ -371,7 +374,10 @@ def tf_enrich(adata, trrust_path, regression_key="regression"):
 
         # Iterate over rows of df_tf[idx]:
         for target in df_tf.loc[idx, "Target"]:
-            adata.var.loc[adata.var_names == target, tf] = 1
+            if gene_key:
+                adata.var.loc[adata.var[gene_key].values == target, tf] = 1
+            else:
+                adata.var.loc[adata.var_names == target, tf] = 1
 
     df_tf_stats = pd.DataFrame(index=df_tf["TF"].unique())
     for tf in tqdm(df_tf_stats.index):
