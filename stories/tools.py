@@ -215,7 +215,7 @@ def plot_velocity(
 
     vk = cr.kernels.VelocityKernel(
         adata, attr="obsm", xkey=omics_key, vkey=velocity_key
-    ).compute_transition_matrix()
+    ).compute_transition_matrix(backend="threading")
     vk.plot_projection(basis=basis, recompute=True, **kwargs)
 
 def default_checkpoint_manager(absolute_path: str) -> CheckpointManager:
@@ -330,7 +330,7 @@ def plot_single_gene_trend(adata, gene, potential_key="potential", annotation_ke
     plt.legend(markerscale=3)
     plt.show()
 
-def tf_enrich(adata, trrust_path="trrust_rawdata.mouse.tsv", regression_key="regression"):
+def tf_enrich(adata, trrust_path, regression_key="regression"):
     df_tf = pd.read_csv(trrust_path, sep="\t", header=None)
     df_tf.columns = ["TF", "Target", "Mode", "References"]
     df_tf = df_tf[df_tf["Target"].isin(adata.var_names)]
