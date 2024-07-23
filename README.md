@@ -1,6 +1,7 @@
 # Learning cell fate landscapes from spatial transcriptomics using Fused Gromov-Wasserstein
 
 [![codecov](https://codecov.io/gh/gjhuizing/stories/graph/badge.svg?token=5DWDYPAUYI)](https://codecov.io/gh/gjhuizing/stories)
+[![Tests](https://github.com/cantinilab/stories/actions/workflows/main.yml/badge.svg)](https://github.com/cantinilab/stories/actions/workflows/main.yml)
 
 STORIES is a novel trajectory inference method for spatial transcriptomics data profiled at several time points, relying on Wasserstein gradient flow learning and Fused Gromov-Wasserstein. [Read the preprint here](https://www.biorxiv.org/content/xxxxx) and [the documentation here](https://stories.rtfd.io)!
 
