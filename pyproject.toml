@@ -31,10 +31,6 @@ exclude_also = [
     "@(abc\\.)?abstractmethod",
 ]
 
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
