@@ -24,6 +24,12 @@ scikit-learn = "^1.5.1"
 seaborn = "^0.13.2"
 cellrank = "^2.0.4"
 
+[tool.poetry.group.docs.dependencies]
+myst-parser = "^3.0.1"
+sphinxawesome-theme = "^5.2.0"
+sphinx-design = "^0.6.0"
+nbsphinx = "^0.9.4"
+
 [tool.coverage.report]
 exclude_also = [
     "raise AssertionError",
