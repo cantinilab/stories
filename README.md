@@ -7,7 +7,7 @@
 
 STORIES is a trajectory inference method capable of learning a causal model of cellular differentiation from spatial transcriptomics through time using Fused Gromov-Wasserstein. STORIES learns a potential function that defines each cell's stage of differentiation and allows one to predict the evolution of cells at future time points. In addition, STORIES uncovers possible driver genes and transcriptional regulators of cellular differentiation.
 
-[Read the preprint here](https://www.biorxiv.org/content/xxxxx) and [the documentation here](https://stories.rtfd.io)!
+[Read the preprint here](https://www.biorxiv.org/content/10.1101/2024.07.26.605241v1) and [the documentation here](https://stories.rtfd.io)!
 
 STORIES is based on the Scverse ecosystem, making it easy to interface with existing tools for single-cell analysis such as Scanpy and CellRank. In addition, STORIES benefits from the JAX ecosystem for deep learning and OT computation, enabling the fast handling of large datasets.
 
@@ -21,6 +21,12 @@ STORIES is implemented as a Python package seamlessly integrated within the scve
 
 ```bash
 pip install stories-jax
+```
+
+By default, JAX is installed for CPU. To get the GPU version, you can use the following (refer to [JAX's docs](https://jax.readthedocs.io/en/latest/installation.html))
+
+```bash
+!pip install stories-jax jax[cuda12]
 ```
 
 ### via GitHub (development version)
