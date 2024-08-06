@@ -16,7 +16,8 @@ STORIES is based on the Scverse ecosystem, making it easy to interface with exis
 
 ## Install the package
 
-STORIES is implemented as a Python package seamlessly integrated within the scverse ecosystem. It relies on JAX for fast GPU computations and JIT compilation, and OTT for Optimal Transport computations.
+- STORIES is implemented as a Python package seamlessly integrated within the scverse ecosystem. It relies on JAX for fast GPU computations and JIT compilation, and OTT for Optimal Transport computations.
+- **System requirements**: Python >= 3.10. Continuously tested on Ubuntu 22.04 LTS. Installation time <1mn. Benefits from CUDA or TPU for large datasets (on a GPU A40 and for 800k cells, training time ~ 30mn).
 
 ### via PyPI (recommended)
 
