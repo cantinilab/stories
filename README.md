@@ -1,6 +1,6 @@
 # Learning cell fate landscapes from spatial transcriptomics using Fused Gromov-Wasserstein
 
-[![codecov](https://codecov.io/gh/gjhuizing/stories/graph/badge.svg?token=5DWDYPAUYI)](https://codecov.io/gh/gjhuizing/stories)
+[![codecov](https://codecov.io/gh/cantinilab/stories/graph/badge.svg?token=5DWDYPAUYI)](https://codecov.io/gh/cantinilab/stories)
 [![Tests](https://github.com/cantinilab/stories/actions/workflows/main.yml/badge.svg)](https://github.com/cantinilab/stories/actions/workflows/main.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Documentation Status](https://readthedocs.org/projects/stories/badge/?version=latest)](https://stories.readthedocs.io/en/latest/?badge=latest)
