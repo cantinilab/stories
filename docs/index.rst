@@ -47,7 +47,7 @@ via PyPI (recommended)
 
 .. code-block:: bash
 
-   pip install stories-jax
+   pip install stories-jax jax[cuda12]==0.4.26
 
 via GitHub (development version)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

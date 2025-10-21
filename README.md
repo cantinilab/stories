@@ -28,7 +28,7 @@ pip install stories-jax
 By default, JAX is installed for CPU. To get the GPU version, you can use the following (refer to [JAX's docs](https://jax.readthedocs.io/en/latest/installation.html)). For use in Google Colab, you'll need to restart the kernel after this command.
 
 ```bash
-pip install stories-jax jax[cuda12]
+pip install stories-jax jax[cuda12]==0.4.26
 ```
 
 ### via GitHub (development version)
