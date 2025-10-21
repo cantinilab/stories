@@ -10,7 +10,6 @@ import optax
 from flax.training import orbax_utils
 from flax.training.early_stopping import EarlyStopping
 from jax.random import PRNGKey
-from jax._src.random import KeyArray
 import uuid
 from orbax.checkpoint.args import StandardRestore
 from optax import GradientTransformation
@@ -65,7 +64,7 @@ class SpaceTime:
         min_delta: float = 0.0,
         patience: int = 150,
         checkpoint_manager: CheckpointManager | str | None = None,
-        key: KeyArray = PRNGKey(0),
+        key: jax.Array = PRNGKey(0),
         restore: bool = True,
     ) -> None:
         """Fit the model.
@@ -83,7 +82,7 @@ class SpaceTime:
             min_delta (float, optional): The minimum delta for early stopping.
             patience (int, optional): The patience for early stopping.
             checkpoint_manager (CheckpointManager, optional): Checkpoint manager or path.
-            key (KeyArray, optional): The random key. Defaults to PRNGKey(0).
+            key (jax.Array, optional): The random key. Defaults to PRNGKey(0).
             restore (bool, optional): By default, load the checkpointed params.
         """
 
@@ -214,7 +213,7 @@ class SpaceTime:
         omics_key: str,
         tau: float,
         batch_size: int = 1_000,
-        key: KeyArray = PRNGKey(0),
+        key: jax.Array = PRNGKey(0),
     ) -> np.ndarray:
         """Transform an AnnData object.
 
@@ -223,7 +222,7 @@ class SpaceTime:
             omics_key (str): The obsm field containing the data to transform.
             tau (float, optional): The time step.
             batch_size (int, optional): The batch size. Defaults to 250.
-            key (KeyArray, optional): The random key. Defaults to PRNGKey(0).
+            key (jax.Array, optional): The random key. Defaults to PRNGKey(0).
 
         Returns:
             np.ndarray: The predictions.
