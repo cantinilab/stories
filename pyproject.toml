@@ -3,7 +3,7 @@ name = "stories-jax"
 packages = [
     { include="stories", from="." },
 ]
-version = "0.1.0"
+version = "0.1.1"
 description = "Learn spatially informed Waddington-like potentials for single-cell gene expression"
 authors = ["Geert-Jan Huizing <gjhuizing@gmail.com>", "Gabriel Peyré", "Laura Cantini"]
 readme = "README.md"

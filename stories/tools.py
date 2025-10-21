@@ -2,7 +2,6 @@ from typing import Dict
 
 from anndata import AnnData
 import jax
-from jax._src.random import KeyArray
 from orbax.checkpoint import CheckpointManagerOptions, CheckpointManager
 import orbax.checkpoint as ocp
 import jax.numpy as jnp
@@ -60,7 +59,7 @@ class DataLoader:
         self.n_space = self.adata.obsm[self.space_key].shape[1]
         self.n_timepoints = len(self.timepoints)
 
-    def make_train_val_split(self, key: KeyArray) -> None:
+    def make_train_val_split(self, key: jax.Array) -> None:
         """Make a train/validation split. Must be called before training.
 
         Args:
@@ -85,11 +84,11 @@ class DataLoader:
         logging.info(f"Train (# cells): {[len(idx) for idx in self.idx_train]}")
         logging.info(f"Val (# cells): {[len(idx) for idx in self.idx_val]}")
 
-    def next(self, key: KeyArray, train_or_val: str) -> Dict[str, jax.Array]:
+    def next(self, key: jax.Array, train_or_val: str) -> Dict[str, jax.Array]:
         """Get the next batch from either train or val indices.
 
         Args:
-            key (KeyArray): The random number generator key for sampling.
+            key (jax.Array): The random number generator key for sampling.
             train_or_val (str): Either "train" or "val".
 
         Returns:
